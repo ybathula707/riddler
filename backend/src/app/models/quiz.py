@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import event
 from flask_sqlalchemy import SQLAlchemy
-
+from ..video_processor import generate_summaries
 db = SQLAlchemy()
 
 
@@ -33,7 +33,8 @@ class Quiz(db.Model):
 def receive_after_insert(mapper, connection, target):
     print(f"SQLAlchemy after_insert event: User {target.video_url} created.")
 
-    # summary = VideoProcessor.createSummary(target.video_url)
+    video_summary = generate_summaries(target.video_url)
+    print(video_summary)
     # Quiz(summary = summary)
     # Quiz.save()
 
