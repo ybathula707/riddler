@@ -65,8 +65,8 @@ function App() {
   return (
     <div className="app">
       <div className="container">
-        <h1>Video URL Submission</h1>
-        <p className="subtitle">Enter a video URL to create a quiz</p>
+        <h1>Lecture Quiz Submission</h1>
+        <p className="subtitle">Enter a lecture video URL to create a quiz</p>
         
         <form onSubmit={handleSubmit} className="video-form">
           <div className="form-group">
@@ -76,7 +76,7 @@ function App() {
               id="videoUrl"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://example.com/video.mp4"
+              placeholder="https://youtube.com/video"
               disabled={isLoading}
               className="video-input"
             />
