@@ -79,7 +79,7 @@ def create_quiz():
         # Create new quiz record
         new_quiz = Quiz(
             video_url=video_url,
-            quiz_json=default_quiz_json, # TODO: remove this
+            # quiz_json=default_quiz_json, # TODO: remove this
             summary=""
         )
         
