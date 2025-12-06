@@ -1,9 +1,8 @@
 from datetime import datetime
 from sqlalchemy import event
 from flask_sqlalchemy import SQLAlchemy
-from ..video_processor import generate_summaries
-db = SQLAlchemy()
 
+db = SQLAlchemy()
 
 class Quiz(db.Model):
     """Quiz model representing the quiz table in MySQL database"""
@@ -33,10 +32,14 @@ class Quiz(db.Model):
 
 @event.listens_for(Quiz, 'after_insert')
 def receive_after_insert(mapper, connection, target):
-    print(f"SQLAlchemy after_insert event: User {target.video_url} created.")
+    from ..video_processor import generate_summaries
+    from src.app import app_context
+    import threading
 
-    video_summary = generate_summaries(target.video_url)
-    print(video_summary)
+    print(f"SQLAlchemy after_insert event: User {target.video_url} created.")
+    thread = threading.Thread(target=generate_summaries,args=(target.id, app_context),daemon=True )
+    thread.start()
+    #video_summary = generate_summaries(target.video_url)
     # Quiz(summary = summary)
     # Quiz.save()
 

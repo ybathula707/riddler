@@ -53,3 +53,6 @@ def create_app(test_config=None):
         return 'Hello, World!'
     
     return app
+
+app = create_app()
+app_context = app.app_context()

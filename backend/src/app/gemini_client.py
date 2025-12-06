@@ -8,6 +8,8 @@ youtube_url = "https://youtu.be/loqCY9b7aec?si=4a1WaUR-nn3Th7qi"
 
 def generate_video_summary_prompt(video_url: str) -> str:
 
+    print(f"Generating summary for {video_url}")
+
     summary_response = client.models.generate_content(
         model='models/gemini-3-pro-preview',
         contents=types.Content(
@@ -19,10 +21,9 @@ def generate_video_summary_prompt(video_url: str) -> str:
             ]
         )
     )
-    #print(summary_response.text)
     return summary_response.text
 
-#generate_video_summary(youtube_url)
+#generate_video_summary_prompt(youtube_url)
 
 
 

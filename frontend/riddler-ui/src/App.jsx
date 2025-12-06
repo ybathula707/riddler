@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './App.css'
 
 function App() {
-  const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/watch?v=0-MOtwYijkY')
+  const [videoUrl, setVideoUrl] = useState('https://youtu.be/MMv-027KEqU?si=1tZHtCfGPNkm1Xmd')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ text: '', type: '' })
   const [isMenuOpen, setIsMenuOpen] = useState(true)
