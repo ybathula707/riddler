@@ -13,7 +13,7 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
 
-    CORS(app, resources={r"/quiz": {"origins": "*"}})
+    CORS(app, resources={r"/quiz": {"origins": "*"}, r"/quiz/*": {"origins": "*"}})
     
     # Database configuration
     db_user = os.getenv('DB_USER', 'riddler_user')

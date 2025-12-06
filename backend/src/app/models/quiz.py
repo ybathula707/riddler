@@ -12,6 +12,7 @@ class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     video_url = db.Column(db.String(2048), nullable=False)
     summary = db.Column(db.Text, nullable=False)
+    quiz_json = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -24,6 +25,7 @@ class Quiz(db.Model):
             'id': self.id,
             'video_url': self.video_url,
             'summary': self.summary,
+            'quiz_json': self.quiz_json,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

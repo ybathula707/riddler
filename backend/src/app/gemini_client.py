@@ -26,43 +26,55 @@ def generate_video_summary_prompt(video_url: str) -> str:
 #generate_video_summary_prompt(youtube_url)
 
 
-# quiz_prompt = f"""
-# You are a helpful teaching assistant.
 
-# Using ONLY the information in the summary below, create a reasonable number
-# of multiple choice questions (about 5-8) that test understanding of the topic.
+def generate_video_summary_prompt(summary: str) -> str:
+  quiz_prompt = f"""
+  You are a helpful teaching assistant.
 
-# For each question:
-# - Provide 4 answer choices labeled A, B, C, D.
-# - Clearly indicate which option is correct.
+  SUMMARY:
+  {summary}
 
-# Return the response as VALID JSON ONLY, with no extra text, using this exact structure:
+  Using ONLY the information in the summary above, create a reasonable number
+  of multiple choice questions (about 3-5) that test understanding of the topic.
 
-# [
-#   {
-#     "question": "string",
-#     "answer_choices": {
-#       "A": "string",
-#       "B": "string",
-#       "C": "string",
-#       "D": "string"
-#     },
-#     "correct_answer": "A"
-#   }
-# ]
+  For each question:
+  - Provide 4 answer choices labeled A, B, C, D.
+  - Clearly indicate which single option is correct.
 
-# Rules:
-# - Do not include any keys other than: "question", "answer_choices", "correct_answer".
-# - Do not include comments or trailing commas.
-# - Do not wrap the JSON in backticks or any other formatting.
+  Return the response as VALID JSON ONLY, with no extra text, using this exact structure:
 
-# SUMMARY:
-# {summary_response.text}
-# """
+  "questions": [
+    {
+      "id": "d4b20191-ec1b-45cd-b42c-5da4a5defab3",
+      "content": "What is the capital of France?",
+      "answers": [
+        {
+            "id": "da8b428c-8b35-445f-9fbf-e02eb23fb0f8",
+            "content": "Paris"
+        },
+        {
+            "id": "526a81e5-96bd-4c17-8090-c66462f55be3",
+            "content": "London"
+        },
+        {
+            "id": "3c9f8d2e-1a4b-4f7c-9e5d-8b2c6a1d9f3e",
+            "content": "Berlin"
+        }
+      ],
+      "correct_answers": ["da8b428c-8b35-445f-9fbf-e02eb23fb0f8"]
+    }
+  ]
 
-# quiz_response = client.models.generate_content(
-#     model="models/gemini-3-pro-preview",
-#     contents=quiz_prompt,
-# )
+  Rules:
+  - Do not include any keys other than: "question", "answer", "correct_answers".
+  - Do not include comments or trailing commas.
+  - Do not wrap the JSON in backticks or any other formatting.
+  - Return only JSON content
+  """
 
-# print("\nQUIZ:\n", quiz_response.text)
+  quiz_response = client.models.generate_content(
+      model="models/gemini-3-pro-preview",
+      contents=quiz_prompt,
+  )
+
+  return quiz_response.text;
