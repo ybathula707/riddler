@@ -37,14 +37,27 @@ function App() {
       setMessage({ text: 'Please enter a valid URL', type: 'error' })
       return
     }
-
-    // Submit to backend (MOCKED FOR DEVELOPMENT)
+      
     setIsLoading(true)
     try {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock response data
+
+      // create the Quiz in the backend
+      const newQuizResponse = await fetch('http://localhost:5003/quiz', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoUrl }),
+      })
+
+      if (!newQuizResponse.ok) {
+        throw new Error(`Server responded with status: ${newQuizResponse.status}`)
+      }
+            
+      // Mock response data from generated quiz
+      // TODO: make this a polling mechanism
       const data = {
         questions: [
           {
