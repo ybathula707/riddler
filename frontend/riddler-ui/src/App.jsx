@@ -19,6 +19,53 @@ function App() {
     }
   }
 
+  const pollQuizStatus = async (quizId) => {
+    const maxPollingTime = 10 * 60 * 1000 // 10 minutes in milliseconds
+    const pollingInterval = 5000 // 5 seconds
+    const startTime = Date.now()
+
+    return new Promise((resolve, reject) => {
+      const poll = async () => {
+        try {
+          // Check if 10 minutes have passed
+          if (Date.now() - startTime >= maxPollingTime) {
+            reject(new Error('Quiz generation timeout after 10 minutes'))
+            return
+          }
+
+          // Poll the quiz status
+          const response = await fetch(`http://localhost:5003/quiz/${quizId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`)
+          }
+
+          const quizResponse = await response.json()
+          console.log('Polling response:', quizResponse)
+
+          // Check if quiz_json is not null
+          if (quizResponse.quiz.quiz_json && quizResponse.quiz.quiz_json !== null) {
+            resolve(JSON.parse(quizResponse.quiz.quiz_json))
+            return
+          }
+
+          // Continue polling after 5 seconds
+          setTimeout(poll, pollingInterval)
+        } catch (error) {
+          reject(error)
+        }
+      }
+
+      // Start polling
+      poll()
+    })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -26,6 +73,7 @@ function App() {
     setMessage({ text: '', type: '' })
     setQuizData(null)
     setSelectedAnswers({})
+    setSubmittedAnswers({})
 
     // Validate URL
     if (!videoUrl.trim()) {
@@ -40,10 +88,7 @@ function App() {
       
     setIsLoading(true)
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // create the Quiz in the backend
+      // Step 1: Create the quiz in the backend
       const newQuizResponse = await fetch('http://localhost:5003/quiz', {
         method: 'POST',
         headers: {
@@ -55,80 +100,27 @@ function App() {
       if (!newQuizResponse.ok) {
         throw new Error(`Server responded with status: ${newQuizResponse.status}`)
       }
-            
-      // Mock response data from generated quiz
-      // TODO: make this a polling mechanism
-      const data = {
-        questions: [
-          {
-            id: "d4b20191-ec1b-45cd-b42c-5da4a5defab3",
-            content: "What is the capital of France?",
-            answers: [
-              {
-                id: "da8b428c-8b35-445f-9fbf-e02eb23fb0f8",
-                content: "Paris"
-              },
-              {
-                id: "526a81e5-96bd-4c17-8090-c66462f55be3",
-                content: "London"
-              },
-              {
-                id: "3c9f8d2e-1a4b-4f7c-9e5d-8b2c6a1d9f3e",
-                content: "Berlin"
-              },
-              {
-                id: "7e2f9c1b-5d8a-4e3c-b6f7-2a9c8d4e6f1b",
-                content: "Madrid"
-              }
-            ],
-            correct_answers: ["da8b428c-8b35-445f-9fbf-e02eb23fb0f8"]
-          },
-          {
-            id: "8f3c2b1a-9d7e-4c5f-a2b6-1e8d9c3f7a2b",
-            content: "What is 2 + 2?",
-            answers: [
-              {
-                id: "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-                content: "3"
-              },
-              {
-                id: "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
-                content: "4"
-              },
-              {
-                id: "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
-                content: "5"
-              }
-            ],
-            correct_answers: ["2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e"]
-          }
-        ]
+
+      const createQuizResult = await newQuizResponse.json()
+      console.log('Quiz created:', createQuizResult)
+
+      // Extract the quiz ID from the response
+      const quizId = createQuizResult.quiz.id
+      if (!quizId) {
+        throw new Error('No quiz ID returned from server')
       }
 
-      setQuizData(data)
+      // Step 2: Start polling for quiz generation completion
+      setMessage({ text: 'Generating quiz... This may take a few minutes', type: 'success' })
+      
+      const quizData = await pollQuizStatus(quizId)
+
+      // Step 3: Set the quiz data when ready
+      setQuizData(quizData)
       setMessage({ text: 'Quiz generated successfully!', type: 'success' })
       setVideoUrl('') // Clear form on success
-      console.log('Mock Response:', data)
+      console.log('Final quiz data:', quizData)
 
-      /* UNCOMMENT WHEN BACKEND IS READY:
-      const response = await fetch('http://localhost:5000/quiz', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ videoUrl }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      setQuizData(data)
-      setMessage({ text: 'Quiz generated successfully!', type: 'success' })
-      setVideoUrl('') // Clear form on success
-      console.log('Response:', data)
-      */
     } catch (error) {
       setMessage({ 
         text: `Failed to submit: ${error.message}`, 
