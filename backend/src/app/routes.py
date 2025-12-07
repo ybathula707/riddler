@@ -1,9 +1,43 @@
 from flask import Blueprint, request, jsonify
 from .models.quiz import db, Quiz
 import json
+import base64
+import os
 
 quiz_bp = Blueprint('quiz', __name__)
 
+@quiz_bp.route('/quiz/<int:quiz_id>/review', methods=['POST'])
+def review_quiz(quiz_id):
+    print("reviewing quiz:" + str(quiz_id))
+    try:
+        # Get JSON data from request
+        data = request.get_json()
+
+        # Validate required fields
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        # Read the PNG image and convert to base64
+        image_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'generated_image.png')
+        quiz_viz_base64 = ""
+        
+        try:
+            with open(image_path, 'rb') as image_file:
+                image_data = image_file.read()
+                quiz_viz_base64 = base64.b64encode(image_data).decode('utf-8')
+        except FileNotFoundError:
+            print(f"Warning: Image file not found at {image_path}")
+        except Exception as img_error:
+            print(f"Error reading image: {str(img_error)}")
+        
+        return jsonify({
+            'message': 'Quiz question reviewed successfully',
+            'quiz_id': str(quiz_id),
+            'quiz_viz': quiz_viz_base64
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': f'Failed to review quiz: {str(e)}'}), 500
 
 @quiz_bp.route('/quiz', methods=['POST'])
 def create_quiz():

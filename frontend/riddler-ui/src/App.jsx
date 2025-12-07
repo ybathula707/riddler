@@ -7,6 +7,7 @@ function App() {
   const [message, setMessage] = useState({ text: '', type: '' })
   const [isMenuOpen, setIsMenuOpen] = useState(true)
   const [quizData, setQuizData] = useState(null)
+  const [quizId, setQuizId] = useState(null)
   const [selectedAnswers, setSelectedAnswers] = useState({})
   const [submittedAnswers, setSubmittedAnswers] = useState({})
 
@@ -115,7 +116,8 @@ function App() {
       
       const quizData = await pollQuizStatus(quizId)
 
-      // Step 3: Set the quiz data when ready
+      // Step 3: Set the quiz data and quiz ID when ready
+      setQuizId(quizId)
       setQuizData(quizData)
       setMessage({ text: 'Quiz generated successfully!', type: 'success' })
       setVideoUrl('') // Clear form on success
@@ -139,15 +141,16 @@ function App() {
     }))
   }
 
-  const handleQuestionSubmit = (questionId) => {
+  const handleQuestionSubmit = async (questionId) => {
     const selectedAnswerId = selectedAnswers[questionId]
     const question = quizData.questions.find(q => q.id === questionId)
     
-    if (!question || !selectedAnswerId) return
+    if (!question || !selectedAnswerId || !quizId) return
     
     // Check if the selected answer is correct
     const isCorrect = question.correct_answers.includes(selectedAnswerId)
     
+    // Update local state first
     setSubmittedAnswers(prev => ({
       ...prev,
       [questionId]: {
@@ -155,6 +158,52 @@ function App() {
         isCorrect: isCorrect
       }
     }))
+
+    // Send POST request to review endpoint
+    try {
+      const selectedAnswer = question.answers.find(ans => ans.id === selectedAnswerId)
+      
+      const reviewData = {
+        question: {
+          id: question.id,
+          content: question.content
+        },
+        correct_answers: question.correct_answers,
+        submitted_answer: {
+          id: selectedAnswerId,
+          content: selectedAnswer.content
+        },
+        is_correct: isCorrect
+      }
+
+      const response = await fetch(`http://localhost:5003/quiz/${quizId}/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      })
+
+      if (!response.ok) {
+        console.error('Failed to submit review:', response.status)
+      } else {
+        const result = await response.json()
+        console.log('Review submitted successfully:', result)
+        
+        // Update state with quiz visualization image if present
+        if (result.quiz_viz) {
+          setSubmittedAnswers(prev => ({
+            ...prev,
+            [questionId]: {
+              ...prev[questionId],
+              quizViz: result.quiz_viz
+            }
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error)
+    }
   }
 
   return (
@@ -264,23 +313,35 @@ function App() {
                   </button>
                   
                   {submittedAnswers[question.id] && (
-                    <div className={`answer-feedback ${submittedAnswers[question.id].isCorrect ? 'correct' : 'incorrect'}`}>
-                      {submittedAnswers[question.id].isCorrect ? (
-                        <>
-                          <svg className="feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span className="feedback-text">Correct!</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          <span className="feedback-text">Incorrect</span>
-                        </>
+                    <>
+                      <div className={`answer-feedback ${submittedAnswers[question.id].isCorrect ? 'correct' : 'incorrect'}`}>
+                        {submittedAnswers[question.id].isCorrect ? (
+                          <>
+                            <svg className="feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="feedback-text">Correct!</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span className="feedback-text">Incorrect</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      {submittedAnswers[question.id].quizViz && (
+                        <div className="quiz-visualization">
+                          <img 
+                            src={`data:image/png;base64,${submittedAnswers[question.id].quizViz}`}
+                            alt="Quiz Visualization"
+                            className="quiz-viz-image"
+                          />
+                        </div>
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
               ))}
