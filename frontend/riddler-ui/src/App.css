@@ -450,7 +450,25 @@ label {
   font-size: 1rem;
 }
 
+/* Quiz Visualization */
+.quiz-visualization {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  animation: slideIn 0.3s ease;
+}
+
+.quiz-viz-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+}
+
 /* Responsive design */
+
 @media (max-width: 1024px) {
   .app {
     flex-direction: column;
