@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from .models.quiz import db, Quiz
+from src.app.gemini_client import generate_explanation_image
 import json
 import base64
 import os
@@ -16,11 +17,13 @@ def review_quiz(quiz_id):
         # Validate required fields
         if not data:
             return jsonify({'error': 'Request body is required'}), 400
-        
+
+        generate_explanation_image(json.dumps(data));
+
         # Read the PNG image and convert to base64
         image_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'generated_image.png')
         quiz_viz_base64 = ""
-        
+
         try:
             with open(image_path, 'rb') as image_file:
                 image_data = image_file.read()
